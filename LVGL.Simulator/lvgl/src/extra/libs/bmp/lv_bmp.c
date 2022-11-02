@@ -26,8 +26,9 @@ typedef struct {
     int px_height;
     unsigned int bpp;
     int row_size_bytes;
+    lv_color_t* BmpIndex;
 } bmp_dsc_t;
-
+//#define INDEX_COLOR_limit(c,v)    (c>v)?c=v:c=c
 /**********************
  *  STATIC PROTOTYPES
  **********************/
@@ -114,8 +115,9 @@ static lv_res_t decoder_info(lv_img_decoder_t* decoder, const void* src, lv_img_
     return LV_RES_INV;         /*If didn't succeeded earlier then it's an error*/
 }
 
-uint16_t color_index[5];
-
+uint16_t color_index[16];
+//#define
+//#define color_32_to_16(c) ((c&0X1F0000)|(c&0XF80000))
 /**
  * Open a PNG image and return the decided image
  * @param src can be file name or pointer to a C array
@@ -140,15 +142,32 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
         lv_fs_res_t res = lv_fs_open(&b.f, dsc->src, LV_FS_MODE_RD);
         if (res == LV_RES_OK) return LV_RES_INV;
 
-        uint8_t header[54];
-        lv_fs_read(&b.f, header, 54, NULL);
-#if 0
+        uint8_t header[200];
+        lv_fs_read(&b.f, header, 200, NULL);
+#if 1
+        uint8_t* t;
+        uint32_t k = 0;
         BITMAPINFOHEADER info;
         memcpy(&info, header + 14, 40);             //读取信息
-        uint16_t i;
-        uint8_t index[50];
-        info.biSize;
-        lv_fs_read(&b.f, header + info.biSize + 0X0E, 54, NULL);
+        t = lv_mem_alloc(info.biClrUsed * 4);             //建立index换算内存
+        b.BmpIndex = lv_mem_alloc(sizeof(lv_color_t) * info.biClrUsed);
+        if (t == NULL || b.BmpIndex == NULL)
+        {
+            lv_mem_free(t);
+            lv_mem_free(b.BmpIndex);
+        }
+        else
+        {
+            memcpy(t, header + info.biSize + 0X0E, info.biClrUsed * 4);           //获取index
+            for (int i = 0; i < info.biClrUsed; i++)
+            {
+                b.BmpIndex[i].ch.red = t[i * 4 + 2];
+                b.BmpIndex[i].ch.green = t[i * 4 + 2];
+                b.BmpIndex[i].ch.blue = t[i * 4 + 2];
+                LV_LOG_USER("\r\n %x:%x:%x  %x", t[i * 4 + 2], (t[i * 4 + 1]), (t[i * 4 + 0]), k);
+            }
+        }
+
 #endif // 0
 
 
@@ -208,18 +227,31 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
     LV_UNUSED(decoder);
 
     bmp_dsc_t* b = dsc->user_data;
-#if 1
+#if 0
     y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
     uint32_t p = b->px_offset + b->row_size_bytes * y;
     p += x * (b->bpp / 8);
     lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
     lv_fs_read(&b->f, buf, len * (b->bpp / 8), NULL);
 #else
+    uint8_t color_buff[1000];
+    uint16_t* buff_addr;
+    buff_addr = (uint16_t*)buf;
+    //color_buff = lv_mem_alloc(len);
+    //LV_ASSERT_MALLOC(color_buff);
+    if (color_buff == 0) return LV_RES_OK;
     y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
     uint32_t p = b->px_offset + b->row_size_bytes * y;
-    p += (x / 8 * b->bpp);
+    p += 1;
     lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
-    lv_fs_read(&b->f, buf, len * (b->bpp / 8), NULL);
+    lv_fs_read(&b->f, color_buff, len / 2, NULL);    //SD卡读取
+    for (int i = 0; i < len; i += 2)
+    {
+        buff_addr[i] = color_index[color_buff[i / 2] >> 4];
+        buff_addr[i + 1] = color_index[color_buff[i / 2] & 0X0F];
+        //buff_addr[i] = color_index[color_buff[i]&0X0F];
+    }
+    //lv_mem_free(color_buff);
 #endif // 0
 
 
@@ -255,8 +287,8 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
             c->ch.green = t[1];
             c->ch.blue = t[0];
             c->ch.alpha = 0xff;
-        }
     }
+}
 #endif
 
     return LV_RES_OK;

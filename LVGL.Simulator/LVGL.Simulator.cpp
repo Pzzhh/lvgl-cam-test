@@ -85,9 +85,8 @@ int main()
     lv_fs_close(&f);
 
     lv_obj_t* img = lv_img_create(lv_scr_act());
-    lv_img_set_src(img, "C:/Users/pzh/Desktop/t3.bmp");
+    lv_img_set_src(img, "C:/Users/pzh/Desktop/t2_index16.bmp");
     lv_btn_create(lv_scr_act());
-
     while (!lv_win32_quit_signal)
     {
         lv_task_handler();
