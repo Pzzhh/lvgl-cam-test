@@ -115,7 +115,7 @@ static lv_res_t decoder_info(lv_img_decoder_t* decoder, const void* src, lv_img_
     return LV_RES_INV;         /*If didn't succeeded earlier then it's an error*/
 }
 
-uint16_t color_index[16];
+//uint16_t color_index[16];
 //#define
 //#define color_32_to_16(c) ((c&0X1F0000)|(c&0XF80000))
 /**
@@ -159,13 +159,15 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
         else
         {
             memcpy(t, header + info.biSize + 0X0E, info.biClrUsed * 4);           //获取index
+            LV_LOG_USER("\r\n[TOP]");
             for (int i = 0; i < info.biClrUsed; i++)
             {
-                b.BmpIndex[i].ch.red = t[i * 4 + 2];
-                b.BmpIndex[i].ch.green = t[i * 4 + 2];
-                b.BmpIndex[i].ch.blue = t[i * 4 + 2];
-                LV_LOG_USER("\r\n %x:%x:%x  %x", t[i * 4 + 2], (t[i * 4 + 1]), (t[i * 4 + 0]), k);
+                b.BmpIndex[i].ch.red = (t[i * 4 + 2] >> 3) & 0X1F;
+                b.BmpIndex[i].ch.green = (t[i * 4 + 1] >> 2) & 0X3F;
+                b.BmpIndex[i].ch.blue = (t[i * 4 + 0] >> 2) & 0X1F;
+                LV_LOG_USER("\r\n %x:%x:%x  %x", t[i * 4 + 2], (t[i * 4 + 1]), (t[i * 4 + 0]), b.BmpIndex[i].full);
             }
+            lv_mem_free(t);
         }
 
 #endif // 0
@@ -236,20 +238,28 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
 #else
     uint8_t color_buff[1000];
     uint16_t* buff_addr;
+    uint16_t px_num = 0;
     buff_addr = (uint16_t*)buf;
     //color_buff = lv_mem_alloc(len);
     //LV_ASSERT_MALLOC(color_buff);
     if (color_buff == 0) return LV_RES_OK;
     y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
     uint32_t p = b->px_offset + b->row_size_bytes * y;
-    p += 1;
     lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
-    lv_fs_read(&b->f, color_buff, len / 2, NULL);    //SD卡读取
-    for (int i = 0; i < len; i += 2)
+    lv_fs_read(&b->f, color_buff, (len%2)?len/2+1:len/2, NULL);    //SD卡读取
+    for (int i=0;;i++)
     {
-        buff_addr[i] = color_index[color_buff[i / 2] >> 4];
-        buff_addr[i + 1] = color_index[color_buff[i / 2] & 0X0F];
-        //buff_addr[i] = color_index[color_buff[i]&0X0F];
+        if (px_num == len)
+            break;
+       /* {*/
+            (i % 2) ? (buff_addr[px_num++] = b->BmpIndex[color_buff[i / 2] >> 4].full) : (buff_addr[px_num++] = b->BmpIndex[color_buff[i / 2] >> 4].full);
+     /*   }
+        else
+        {
+            i += 2;
+        }*/
+        
+        //buff_addr[px_num+1] = b->BmpIndex[color_buff[i / 2] & 0X0F].full;
     }
     //lv_mem_free(color_buff);
 #endif // 0
@@ -287,8 +297,8 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
             c->ch.green = t[1];
             c->ch.blue = t[0];
             c->ch.alpha = 0xff;
+        }
     }
-}
 #endif
 
     return LV_RES_OK;
@@ -303,6 +313,7 @@ static void decoder_close(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc)
     LV_UNUSED(decoder);
     bmp_dsc_t* b = dsc->user_data;
     lv_fs_close(&b->f);
+    lv_mem_free(b->BmpIndex);                               //清除位图
     lv_mem_free(dsc->user_data);
 
 }
