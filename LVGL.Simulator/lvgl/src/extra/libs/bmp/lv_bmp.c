@@ -27,6 +27,7 @@ typedef struct {
     unsigned int bpp;
     int row_size_bytes;
     lv_color_t* BmpIndex;
+    uint16_t index_num;
 } bmp_dsc_t;
 //#define INDEX_COLOR_limit(c,v)    (c>v)?c=v:c=c
 /**********************
@@ -159,14 +160,15 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
         else
         {
             memcpy(t, header + info.biSize + 0X0E, info.biClrUsed * 4);           //获取index
-            LV_LOG_USER("\r\n[TOP]");
+           // LV_LOG_USER("\r\n[TOP]");
             for (int i = 0; i < info.biClrUsed; i++)
             {
                 b.BmpIndex[i].ch.red = (t[i * 4 + 2] >> 3) & 0X1F;
                 b.BmpIndex[i].ch.green = (t[i * 4 + 1] >> 2) & 0X3F;
-                b.BmpIndex[i].ch.blue = (t[i * 4 + 0] >> 2) & 0X1F;
-                LV_LOG_USER("\r\n %x:%x:%x  %x", t[i * 4 + 2], (t[i * 4 + 1]), (t[i * 4 + 0]), b.BmpIndex[i].full);
+                b.BmpIndex[i].ch.blue = (t[i * 4 + 0] >> 3) & 0X1F;
+                //   LV_LOG_USER("\r\n %x:%x:%x  %x", t[i * 4 + 2], (t[i * 4 + 1]), (t[i * 4 + 0]), b.BmpIndex[i].full);
             }
+            b.index_num = info.biClrUsed;
             lv_mem_free(t);
         }
 
@@ -185,25 +187,26 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
         b.row_size_bytes = ((b.bpp * b.px_width + 31) / 32) * 4;
 
 
-        //bool color_depth_error = false;
-       /* if(LV_COLOR_DEPTH == 32 && (b.bpp != 32 && b.bpp != 24)) {
+        bool color_depth_error = false;
+        if(LV_COLOR_DEPTH == 32 && (b.bpp != 32 && b.bpp != 24)) {
             LV_LOG_WARN("LV_COLOR_DEPTH == 32 but bpp is %d (should be 32 or 24)", b.bpp);
             color_depth_error = true;
         }
-        else if(LV_COLOR_DEPTH == 16 && b.bpp != 16) {
+        else if(LV_COLOR_DEPTH == 16 && b.bpp > 16) {
+            LV_LOG_WARN("LV_COLOR_DEPTH == 16 using custom discoder)");
             LV_LOG_WARN("LV_COLOR_DEPTH == 16 but bpp is %d (should be 16)", b.bpp);
             color_depth_error = true;
         }
         else if(LV_COLOR_DEPTH == 8 && b.bpp != 8) {
             LV_LOG_WARN("LV_COLOR_DEPTH == 8 but bpp is %d (should be 8)", b.bpp);
             color_depth_error = true;
-        }*/
+        }
 
-        /* if(color_depth_error) {
+         if(color_depth_error) {
              dsc->error_msg = "Color depth mismatch";
              lv_fs_close(&b.f);
              return LV_RES_INV;
-         }*/
+         }
 
         dsc->user_data = lv_mem_alloc(sizeof(bmp_dsc_t));
         LV_ASSERT_MALLOC(dsc->user_data);
@@ -222,49 +225,43 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
     return LV_RES_INV;    /*If not returned earlier then it failed*/
 }
 
-
-static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
+static lv_res_t bmp_index(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
     lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t* buf)
 {
-    LV_UNUSED(decoder);
-
     bmp_dsc_t* b = dsc->user_data;
-#if 0
+    uint8_t* color_buff;
+    uint16_t* buff_addr;
+    uint16_t px_num = 0;
+    buff_addr = (uint16_t*)buf;
+    color_buff = lv_mem_alloc(len / 2 + 1);
+    //LV_ASSERT_MALLOC(color_buff);
+    if (color_buff == 0)
+    {
+        LV_LOG_WARN("\r\n apply mem error");
+        return LV_RES_OK;
+    }
+    y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
+    uint32_t p = b->px_offset + b->row_size_bytes * y;
+    lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
+    lv_fs_read(&b->f, color_buff, (len % 2) ? len / 2 + 1 : len / 2, NULL);    //SD卡读取
+    for (int i = 0; i < len; i++)
+    {
+        /*if (px_num == len)
+            break;*/
+        (i % 2) ? (buff_addr[i] = b->BmpIndex[color_buff[i / 2] & 0X0F].full) : (buff_addr[i] = b->BmpIndex[color_buff[i / 2] >> 4].full);
+    }
+    lv_mem_free(color_buff);
+    return LV_RES_OK;
+}
+static lv_res_t bmp_rgb_true_color(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
+    lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t* buf)
+{
+    bmp_dsc_t* b = dsc->user_data;
     y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
     uint32_t p = b->px_offset + b->row_size_bytes * y;
     p += x * (b->bpp / 8);
     lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
     lv_fs_read(&b->f, buf, len * (b->bpp / 8), NULL);
-#else
-    uint8_t color_buff[1000];
-    uint16_t* buff_addr;
-    uint16_t px_num = 0;
-    buff_addr = (uint16_t*)buf;
-    //color_buff = lv_mem_alloc(len);
-    //LV_ASSERT_MALLOC(color_buff);
-    if (color_buff == 0) return LV_RES_OK;
-    y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
-    uint32_t p = b->px_offset + b->row_size_bytes * y;
-    lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
-    lv_fs_read(&b->f, color_buff, (len%2)?len/2+1:len/2, NULL);    //SD卡读取
-    for (int i=0;;i++)
-    {
-        if (px_num == len)
-            break;
-       /* {*/
-            (i % 2) ? (buff_addr[px_num++] = b->BmpIndex[color_buff[i / 2] >> 4].full) : (buff_addr[px_num++] = b->BmpIndex[color_buff[i / 2] >> 4].full);
-     /*   }
-        else
-        {
-            i += 2;
-        }*/
-        
-        //buff_addr[px_num+1] = b->BmpIndex[color_buff[i / 2] & 0X0F].full;
-    }
-    //lv_mem_free(color_buff);
-#endif // 0
-
-
 #if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 1
     for (unsigned int i = 0; i < len * (b->bpp / 8); i += 2) {
         buf[i] = buf[i] ^ buf[i + 1];
@@ -302,6 +299,22 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
 #endif
 
     return LV_RES_OK;
+}
+static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
+    lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t* buf)
+{
+    LV_UNUSED(decoder);
+    bmp_dsc_t* b = dsc->user_data;
+    if (b->index_num == 0)
+    {
+        return bmp_rgb_true_color(decoder, dsc, x, y, len, buf);
+    }
+    else if (b->index_num < 16)
+    {
+        return bmp_index(decoder, dsc, x, y, len, buf);
+    }
+
+
 }
 
 
