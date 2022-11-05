@@ -78,6 +78,14 @@ void move_handle2(lv_timer_t* e)
     (800 > obj->x) ? obj->x += 10 : obj->x = 300;
     lv_obj_set_pos(obj->obj, obj->x, obj->y);
 }
+
+void ack_handle(void)
+{
+    LV_LOG_USER("\r\n work");
+}
+
+
+#include "mycode/extra_display.h"
 int main()
 {
     lv_init();
@@ -103,6 +111,7 @@ int main()
     memcpy(&f1_Header, header, 14);
     memcpy(&f1_Info, header+ 14, 40);
     lv_fs_close(&f);*/
+#if 0
     img_data img1,img2;
     memset(&img1, 0, sizeof img1);
     memset(&img2, 0, sizeof img2);
@@ -115,6 +124,10 @@ int main()
     lv_timer_create(move_handle, 1000, (void*)&img1);
     lv_timer_create(move_handle2, 1000, (void*)&img2);
     lv_btn_create(lv_scr_act());
+
+#endif // 0
+    Extra_display_init(20);
+    lv_timer_create((lv_timer_cb_t)ack_handle, 1000, 0);
     while (!lv_win32_quit_signal)
     {
         lv_task_handler();
