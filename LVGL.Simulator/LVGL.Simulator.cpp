@@ -58,10 +58,30 @@
 //} BITMAPINFOHEADER;
 BITMAPFILEHEADER f1_Header;
 BITMAPINFOHEADER f1_Info;
+struct img_data
+{
+    lv_obj_t* obj;
+    uint16_t x;
+    uint16_t y;
+};
+void move_handle(lv_timer_t *e)
+{
+    img_data * obj = (img_data *)(e->user_data);
+    //static int x;
+    (800 > obj->x) ? obj->x += 10 : obj->x = 300;
+    lv_obj_set_pos(obj->obj, obj->x, obj->y);
+}
+void move_handle2(lv_timer_t* e)
+{
+    img_data* obj = (img_data*)(e->user_data);
+    //static int x;
+    (800 > obj->x) ? obj->x += 10 : obj->x = 300;
+    lv_obj_set_pos(obj->obj, obj->x, obj->y);
+}
 int main()
 {
     lv_init();
-
+    
     if (!lv_win32_init(
         GetModuleHandleW(NULL),
         SW_SHOW,
@@ -73,19 +93,27 @@ int main()
     }
     lv_fs_win32_init();
     lv_win32_add_all_input_devices_to_group(NULL);
-    lv_fs_file_t f;
-    lv_fs_res_t res = lv_fs_open(&f, "C:/Users/pzh/Desktop/t3.bmp", LV_FS_MODE_RD);
+   /* lv_fs_file_t f;
+    lv_fs_res_t res = lv_fs_open(&f, "C:/Users/pzh/Desktop/t4.bmp", LV_FS_MODE_RD);
     if (res == LV_RES_OK) {
 
-    }
-    uint8_t header[56];
+    }*/
+    /*uint8_t header[56];
     lv_fs_read(&f, header, 56, NULL);
     memcpy(&f1_Header, header, 14);
     memcpy(&f1_Info, header+ 14, 40);
-    lv_fs_close(&f);
-
-    lv_obj_t* img = lv_img_create(lv_scr_act());
-    lv_img_set_src(img, "C:/Users/pzh/Desktop/t5_index16.bmp");
+    lv_fs_close(&f);*/
+    img_data img1,img2;
+    memset(&img1, 0, sizeof img1);
+    memset(&img2, 0, sizeof img2);
+    img1.obj= lv_img_create(lv_scr_act());
+    lv_img_set_src(img1.obj, "C:/Users/pzh/Desktop/t6.bmp");
+    img2.obj = lv_img_create(lv_scr_act());
+    lv_img_set_src(img2.obj, "C:/Users/pzh/Desktop/t2_index16.bmp");
+    img2.x = 400;
+    img2.y = 300;
+    lv_timer_create(move_handle, 1000, (void*)&img1);
+    lv_timer_create(move_handle2, 1000, (void*)&img2);
     lv_btn_create(lv_scr_act());
     while (!lv_win32_quit_signal)
     {

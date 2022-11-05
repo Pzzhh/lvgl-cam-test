@@ -128,7 +128,7 @@ static lv_res_t decoder_info(lv_img_decoder_t* decoder, const void* src, lv_img_
 static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc)
 {
     LV_UNUSED(decoder);
-
+    LV_LOG_USER(" [OP]addr %s", dsc->src);
     /*If it's a PNG file...*/
     if (dsc->src_type == LV_IMG_SRC_FILE) {
         const char* fn = dsc->src;
@@ -224,16 +224,19 @@ static lv_res_t decoder_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* ds
 
     return LV_RES_INV;    /*If not returned earlier then it failed*/
 }
-
+lv_img_decoder_t* t1;
+int addr;
 static lv_res_t bmp_index(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
     lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t* buf)
 {
+   
+    
     bmp_dsc_t* b = dsc->user_data;
     uint8_t* color_buff;
     uint16_t* buff_addr;
     uint16_t px_num = 0;
     buff_addr = (uint16_t*)buf;
-    color_buff = lv_mem_alloc(len / 2 + 1);
+    color_buff = lv_mem_alloc(len );
     //LV_ASSERT_MALLOC(color_buff);
     if (color_buff == 0)
     {
@@ -242,6 +245,7 @@ static lv_res_t bmp_index(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
     }
     y = (b->px_height - 1) - y; /*BMP images are stored upside down*/
     uint32_t p = b->px_offset + b->row_size_bytes * y;
+    p += x /2;
     lv_fs_seek(&b->f, p, LV_FS_SEEK_SET);
     lv_fs_read(&b->f, color_buff, (len % 2) ? len / 2 + 1 : len / 2, NULL);    //SD卡读取
     for (int i = 0; i < len; i++)
@@ -324,6 +328,7 @@ static lv_res_t decoder_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_
 static void decoder_close(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc)
 {
     LV_UNUSED(decoder);
+    LV_LOG_USER("[CL]--addr %s", dsc->src);
     bmp_dsc_t* b = dsc->user_data;
     lv_fs_close(&b->f);
     lv_mem_free(b->BmpIndex);                               //清除位图
