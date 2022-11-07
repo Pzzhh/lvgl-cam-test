@@ -47,11 +47,14 @@
   <ItemGroup>
     <ClInclude Include="Mile.Project.Properties.h" />
     <ClInclude Include="mycode\extra_display.h" />
+    <ClInclude Include="mycode\FONT.H" />
+    <ClInclude Include="mycode\lcd.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LVGL.Simulator.cpp" />
     <ClCompile Include="mycode\extra_display.cpp" />
+    <ClCompile Include="mycode\lcd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LVGL.Simulator.rc" />

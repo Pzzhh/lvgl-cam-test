@@ -85,7 +85,7 @@ void ack_handle(void)
 }
 
 
-#include "mycode/extra_display.h"
+#include "mycode/lcd.h"
 int main()
 {
     lv_init();
@@ -126,8 +126,9 @@ int main()
     lv_btn_create(lv_scr_act());
 
 #endif // 0
-    Extra_display_init(20);
-    lv_timer_create((lv_timer_cb_t)ack_handle, 1000, 0);
+    
+    LCD_INIT();
+    //lv_timer_create((lv_timer_cb_t)ack_handle, 1000, 0);
     while (!lv_win32_quit_signal)
     {
         lv_task_handler();

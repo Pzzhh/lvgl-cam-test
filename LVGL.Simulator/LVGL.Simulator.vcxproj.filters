@@ -8,6 +8,12 @@
     <ClInclude Include="mycode\extra_display.h">
       <Filter>mycode</Filter>
     </ClInclude>
+    <ClInclude Include="mycode\FONT.H">
+      <Filter>mycode</Filter>
+    </ClInclude>
+    <ClInclude Include="mycode\lcd.h">
+      <Filter>mycode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="LVGL.Simulator.manifest" />
@@ -19,6 +25,9 @@
   <ItemGroup>
     <ClCompile Include="LVGL.Simulator.cpp" />
     <ClCompile Include="mycode\extra_display.cpp">
+      <Filter>mycode</Filter>
+    </ClCompile>
+    <ClCompile Include="mycode\lcd.cpp">
       <Filter>mycode</Filter>
     </ClCompile>
   </ItemGroup>
