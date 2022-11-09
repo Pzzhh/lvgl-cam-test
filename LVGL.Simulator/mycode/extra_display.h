@@ -6,7 +6,7 @@
 typedef enum
 {
     wait,
-    drawing,
+    drawing=5,
 }scr_draw_t;
 
 struct display_info
@@ -15,7 +15,8 @@ struct display_info
     uint16_t h;
     lv_color_t* frema_buf;
     lv_point_t indev;
-    uint8_t valid;              //是否在显示状态
+    uint8_t visible;              //是否在显示状态
+    lv_obj_t* img;
 };
 
 extern struct display_info display1;

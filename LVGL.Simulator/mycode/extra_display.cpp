@@ -85,6 +85,7 @@ void Extra_display_reg_init()
  * @brief 触摸驱动
  * @param e 
 */
+
 void touch_handle(lv_event_t* e)
 {
     lv_event_code_t code = lv_event_get_code(e);
@@ -100,6 +101,9 @@ void touch_handle(lv_event_t* e)
         (display1.indev.y < 0) ? display1.indev.y = 0 : 1;
         (display1.indev.x > click_area.x2 - click_area.x1) ? display1.indev.x = click_area.x2 - click_area.x1 : 1;
         (display1.indev.y > click_area.y2-click_area.y1) ? display1.indev.y = click_area.y2 - click_area.y1 : 1;
+        //lv_disp_set_rotation(disp_def, LV_DISP_ROT_180);
+        //lv_disp_drv_update(lv_disp_get_scr_act(), t);
+        //LV_LOG_USER("\r\n%d", lv_indev_get_gesture_dir(lv_indev_get_act()));
         //LV_LOG_USER("\r\n x1:%d X2:%d y1:%d y2:%d",click_pos. );
         //LV_LOG_USER("\r\n x1:%d y1:%d", display1.indev.x, display1.indev.y);
         //LV_LOG_USER("\r\n x1:%d X2:%d y1:%d y2:%d", click_area.x1, click_area.y1, click_area.x2,click_area.y2);
@@ -112,16 +116,6 @@ void touch_handle(lv_event_t* e)
             display1.indev.y = 0XFFFF;
             //LV_LOG_USER("\r\nreleased ");
         }
-    }
-}
-
-void display_draw_handle(lv_event_t* e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    display_info * d = (display_info*) e->user_data;
-    if (code == LV_EVENT_DRAW_MAIN_BEGIN)
-    {
-        d->valid = drawing;
     }
 }
 
@@ -144,12 +138,13 @@ void Extra_display_init(uint16_t fps)
 
     Extra_display_reg_init();
     lv_obj_t* img = lv_img_create(tab1);
+    img->user_data = (void*)&display1;
     lv_img_set_src(img, "C:/1.my");
     lv_obj_add_flag(img, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(img, LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_timer_create((lv_timer_cb_t)Ex_display_refulsh, fps, (void*)img);
     lv_obj_add_event_cb(img, touch_handle, LV_EVENT_ALL, 0);
-    lv_obj_add_event_cb(img, display_draw_handle, LV_EVENT_DRAW_MAIN_BEGIN, (void*)&display1);
+    lv_obj_set_style_transform_zoom(img, 250, 0);
 }
 
 void display_set_size(uint32_t w, uint32_t h, lv_color_t* e)
@@ -159,15 +154,3 @@ void display_set_size(uint32_t w, uint32_t h, lv_color_t* e)
     display1.frema_buf = e;
 }
 
-uint8_t display_get_vaild(display_info *d)
-{
-    if (d->valid == drawing)
-    {
-        d->valid = wait;
-        return drawing;
-    }
-    else
-    {
-        return wait;
-    }
-}

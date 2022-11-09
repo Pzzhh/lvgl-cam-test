@@ -14,6 +14,9 @@
     <ClInclude Include="mycode\lcd.h">
       <Filter>mycode</Filter>
     </ClInclude>
+    <ClInclude Include="mycode\cam.h">
+      <Filter>mycode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="LVGL.Simulator.manifest" />
@@ -30,15 +33,15 @@
     <ClCompile Include="mycode\lcd.cpp">
       <Filter>mycode</Filter>
     </ClCompile>
+    <ClCompile Include="mycode\cam.cpp">
+      <Filter>mycode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LVGL.Simulator.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="LVGL.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="freetype.props" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mycode">

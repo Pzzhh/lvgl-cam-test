@@ -22,9 +22,11 @@
 #endif
 
 #include "lvgl/lvgl.h"
+#include "lv_conf.h"
 #include "lvgl/examples/lv_examples.h"
 #include "lvgl/demos/lv_demos.h"
 #include "lv_drivers/win32drv/win32drv.h"
+//#include "mycode/cam.h"
 
 #if _MSC_VER >= 1200
 // Restore compilation warnings.
@@ -84,7 +86,6 @@ void ack_handle(void)
     LV_LOG_USER("\r\n work");
 }
 
-
 #include "mycode/lcd.h"
 int main()
 {
@@ -94,7 +95,7 @@ int main()
         GetModuleHandleW(NULL),
         SW_SHOW,
         800,
-        480,
+        800,
         LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_LVGL))))
     {
         return -1;
@@ -126,7 +127,7 @@ int main()
     lv_btn_create(lv_scr_act());
 
 #endif // 0
-    
+    //VideoCapture capture(0);    // 打开摄像头
     LCD_INIT();
     //lv_timer_create((lv_timer_cb_t)ack_handle, 1000, 0);
     while (!lv_win32_quit_signal)

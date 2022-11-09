@@ -3,16 +3,14 @@
 #include "extra_display.h"
 #include "lcd.h"
 #include "FONT.H"
-lv_color_t frema_buf[600 * 800];
+#include "cam.h"
+lv_color_t frema_buf[800 * 800];
 typedef uint16_t u16;
 typedef uint8_t u8;
 typedef uint32_t u32;
 
-void LCD_Fast_DrawPoint(uint16_t x, uint16_t y, uint16_t color);
-void LCD_ShowString(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t size, uint8_t* p);
-void ctp_test(void);
 
-void LCD_Clear(uint16_t color, display_info * e)
+static void LCD_Clear(uint16_t color, display_info * e)
 {
     uint32_t px = e->w * e->h;
     for (int i = 0; i < px; i++)
@@ -25,7 +23,7 @@ void LCD_Clear(uint16_t color, display_info * e)
 //区域大小:(xend-xsta+1)*(yend-ysta+1)
 //xsta
 //color:要填充的颜色
-void LCD_Fill(u16 sx, u16 sy, u16 ex, u16 ey, u16 color)
+static void LCD_Fill(u16 sx, u16 sy, u16 ex, u16 ey, u16 color)
 {
     u16 i, j;
     u16 xlen = 0;
@@ -48,7 +46,7 @@ void LCD_Fill(u16 sx, u16 sy, u16 ex, u16 ey, u16 color)
     }
 }
 
-void LCD_Fast_DrawPoint(uint16_t x, uint16_t y, uint16_t color)
+static void LCD_Fast_DrawPoint(uint16_t x, uint16_t y, uint16_t color)
 {
     uint32_t px = x + y * display1.w;
     frema_buf[px].full = color;
@@ -63,7 +61,7 @@ void LCD_Fast_DrawPoint(uint16_t x, uint16_t y, uint16_t color)
 //x0,y0:坐标
 //len:线长度
 //color:颜色
-void gui_draw_hline(u16 x0, u16 y0, u16 len, u16 color)
+static void gui_draw_hline(u16 x0, u16 y0, u16 len, u16 color)
 {
     if (len == 0)return;
     LCD_Fill(x0, y0, x0 + len - 1, y0, color);
@@ -76,7 +74,7 @@ uint16_t BACK_COLOR = 0Xffff;
 //num:要显示的字符:" "--->"~"
 //size:字体大小 12/16/24
 //mode:叠加方式(1)还是非叠加方式(0)
-void LCD_ShowChar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode)
+static void LCD_ShowChar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode)
 {
     uint8_t temp, t1, t;
     uint16_t y0 = y;
@@ -111,7 +109,7 @@ void LCD_ShowChar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mod
 //width,height:区域大小
 //size:字体大小
 //*p:字符串起始地址
-void LCD_ShowString(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t size, uint8_t* p)
+static void LCD_ShowString(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t size, uint8_t* p)
 {
     uint8_t x0 = x;
     width += x;
@@ -137,7 +135,7 @@ void LCD_ShowString(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uin
 //x0,y0:坐标
 //r:半径
 //color:颜色
-void gui_fill_circle(u16 x0, u16 y0, u16 r, u16 color)
+static void gui_fill_circle(u16 x0, u16 y0, u16 r, u16 color)
 {
     u32 i;
     u32 imax = ((u32)r * 707) / 1000 + 1;
@@ -163,7 +161,7 @@ void gui_fill_circle(u16 x0, u16 y0, u16 r, u16 color)
 
 
 
-void lcd_draw_bline(u16 x1, u16 y1, u16 x2, u16 y2, u8 size, u16 color)
+static void lcd_draw_bline(u16 x1, u16 y1, u16 x2, u16 y2, u8 size, u16 color)
 {
     u16 t;
     int xerr = 0, yerr = 0, delta_x, delta_y, distance;
@@ -204,7 +202,7 @@ void lcd_draw_bline(u16 x1, u16 y1, u16 x2, u16 y2, u8 size, u16 color)
 */
 
 
-void ctp_test(void)
+static void ctp_test(void)
 {
     u8 t = 0;
     u8 i = 0;
@@ -227,7 +225,7 @@ void ctp_test(void)
 /**
  * @brief lcd显示函数
 */
-void lcd_handle()
+static void lcd_handle()
 {
     static lv_color_t e;
     static int x;
@@ -251,7 +249,7 @@ void lcd_handle()
     //LCD_Clear()
     //POINT_COLOR = RED;
     ctp_test();
-
+    
     LCD_ShowString(30, 40, 210, 24, 24, (uint8_t*)"Explorer STM32F4");
     LCD_ShowString(30, 70, 200, 16, 16, (uint8_t*)"TFTLCD TEST");
     LCD_ShowString(30, 90, 200, 16, 16, (uint8_t*)"ATOM@ALIENTEK");
@@ -270,8 +268,8 @@ void lcd_handle()
 
 void LCD_INIT()
 {
-    display_set_size(600, 800, frema_buf);
-    Extra_display_init(60);
+    display_set_size(640, 480, frema_buf);
+    Extra_display_init(30);
 
 }
 
@@ -282,13 +280,11 @@ void LCD_INIT()
 */
 void Ex_display_refulsh(lv_timer_t* e)
 {
-    static int x;
     lv_obj_t* obj = (lv_obj_t*)e->user_data;
-    LV_LOG_USER("\r\n %d", display_get_vaild(&display1));
-    lcd_handle();
-    //lv_obj_event_base
+    display1.visible = lv_obj_is_visible(obj);
+    //lcd_handle();
+    cam_frame_buff_output(frema_buf, 0);
     lv_obj_invalidate(obj);
-
 }
 
 

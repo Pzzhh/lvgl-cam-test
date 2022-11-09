@@ -19,6 +19,9 @@
   </PropertyGroup>
   <Import Project="Mile.Project.Windows.Legacy\Mile.Project.Cpp.props" />
   <Import Project="freetype.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="F:\visual stdio\cvtest\opcv_test.props" />
+  </ImportGroup>
   <PropertyGroup>
     <IncludePath>$(MSBuildThisFileDirectory);$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -46,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mile.Project.Properties.h" />
+    <ClInclude Include="mycode\cam.h" />
     <ClInclude Include="mycode\extra_display.h" />
     <ClInclude Include="mycode\FONT.H" />
     <ClInclude Include="mycode\lcd.h" />
@@ -53,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LVGL.Simulator.cpp" />
+    <ClCompile Include="mycode\cam.cpp" />
     <ClCompile Include="mycode\extra_display.cpp" />
     <ClCompile Include="mycode\lcd.cpp" />
   </ItemGroup>
@@ -61,9 +66,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="LVGL.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="freetype.props" />
   </ItemGroup>
   <Import Project="Mile.Project.Windows.Legacy\Mile.Project.Cpp.targets" />
 </Project>
