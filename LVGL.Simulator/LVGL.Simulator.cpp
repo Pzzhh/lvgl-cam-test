@@ -85,7 +85,8 @@ void ack_handle(void)
 {
     LV_LOG_USER("\r\n work");
 }
-
+int a;
+float c;
 #include "mycode/lcd.h"
 int main()
 {
@@ -102,6 +103,7 @@ int main()
     }
     lv_fs_win32_init();
     lv_win32_add_all_input_devices_to_group(NULL);
+    
    /* lv_fs_file_t f;
     lv_fs_res_t res = lv_fs_open(&f, "C:/Users/pzh/Desktop/t4.bmp", LV_FS_MODE_RD);
     if (res == LV_RES_OK) {
@@ -129,6 +131,8 @@ int main()
 #endif // 0
     //VideoCapture capture(0);    // 打开摄像头
     LCD_INIT();
+    
+
     //lv_timer_create((lv_timer_cb_t)ack_handle, 1000, 0);
     while (!lv_win32_quit_signal)
     {
