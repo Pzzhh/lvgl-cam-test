@@ -35,6 +35,15 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\pzh\Desktop\github\lv_port_win_visual_studio-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</Profile>
+    </Link>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</Profile>
+    </Link>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</Profile>
+    </Link>
   </ItemDefinitionGroup>
   <Import Project="LVGL.Portable.vcxitems" />
   <Import Project="LVGL.Drivers.vcxitems" />

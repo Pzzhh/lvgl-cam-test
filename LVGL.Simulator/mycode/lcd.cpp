@@ -283,7 +283,7 @@ void Ex_display_refulsh(lv_timer_t* e)
     lv_obj_t* obj = (lv_obj_t*)e->user_data;
     display1.visible = lv_obj_is_visible(obj);
     //lcd_handle();
-    //cam_frame_buff_output(frema_buf, 0);
+    cam_frame_buff_output(frema_buf, 0);
     lv_obj_invalidate(obj);
 }
 

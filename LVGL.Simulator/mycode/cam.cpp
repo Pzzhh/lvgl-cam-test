@@ -4,7 +4,7 @@
 #include "opencv2/videoio.hpp"
 #include <iostream>
 #include "cam.h"
-#if 0
+
 using namespace cv;
 using namespace std;
 
@@ -45,4 +45,3 @@ void cam_frame_buff_output(lv_color_t* buf, uint32_t size)
 
 #endif // 0
 }
-#endif

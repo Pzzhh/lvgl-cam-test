@@ -7,7 +7,15 @@ uint8_t flag;
 /*
 *   驱动区
 */
-
+static lv_res_t display_get_info(lv_img_decoder_t* decoder, const void* src, lv_img_header_t* header);
+//图片信息读取
+static lv_res_t display_open(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc);
+//图片打开（用来确认图片类型）
+static lv_res_t display_read_line(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc,
+    lv_coord_t x, lv_coord_t y, lv_coord_t len, uint8_t* buf);
+//读取图片信息
+static void display_close(lv_img_decoder_t* decoder, lv_img_decoder_dsc_t* dsc);
+//关闭读取(空函数)
 static lv_res_t display_get_info(lv_img_decoder_t* decoder, const void* src, lv_img_header_t* header)
 {
     LV_UNUSED(decoder);
@@ -83,7 +91,7 @@ void Extra_display_reg_init()
 
 /**
  * @brief 触摸驱动
- * @param e 
+ * @param e
 */
 
 void touch_handle(lv_event_t* e)
@@ -93,24 +101,18 @@ void touch_handle(lv_event_t* e)
     lv_area_t click_area;
     if (code < LV_EVENT_CLICKED) {
         lv_obj_t* obj = lv_event_get_target(e);
-        lv_indev_get_point(lv_indev_get_act(), &click_pos);
-        lv_obj_get_click_area(obj, &click_area);
-        display1.indev.x = click_pos.x - click_area.x1;
-        display1.indev.y = click_pos.y - click_area.y1;
+        lv_indev_get_point(lv_indev_get_act(), &click_pos);         //读取当前触摸点（零点为屏幕左上角）
+        lv_obj_get_click_area(obj, &click_area);                    //读取图片的显示范围（零点为屏幕左上角）
+        display1.indev.x = click_pos.x - click_area.x1;             //获得触摸的位置（零点在控件的左上角）
+        display1.indev.y = click_pos.y - click_area.y1;             //获得触摸的位置（零点在控件的左上角）    
         (display1.indev.x < 0) ? display1.indev.x = 0 : 1;          //控制边界防止超出边界
         (display1.indev.y < 0) ? display1.indev.y = 0 : 1;
         (display1.indev.x > click_area.x2 - click_area.x1) ? display1.indev.x = click_area.x2 - click_area.x1 : 1;
-        (display1.indev.y > click_area.y2-click_area.y1) ? display1.indev.y = click_area.y2 - click_area.y1 : 1;
-        //lv_disp_set_rotation(disp_def, LV_DISP_ROT_180);
-        //lv_disp_drv_update(lv_disp_get_scr_act(), t);
-        //LV_LOG_USER("\r\n%d", lv_indev_get_gesture_dir(lv_indev_get_act()));
-        //LV_LOG_USER("\r\n x1:%d X2:%d y1:%d y2:%d",click_pos. );
-        //LV_LOG_USER("\r\n x1:%d y1:%d", display1.indev.x, display1.indev.y);
-        //LV_LOG_USER("\r\n x1:%d X2:%d y1:%d y2:%d", click_area.x1, click_area.y1, click_area.x2,click_area.y2);
+        (display1.indev.y > click_area.y2 - click_area.y1) ? display1.indev.y = click_area.y2 - click_area.y1 : 1;
     }
     else
     {
-        if (code == LV_EVENT_CLICKED )
+        if (code == LV_EVENT_CLICKED)
         {
             display1.indev.x = 0XFFFF;
             display1.indev.y = 0XFFFF;
@@ -121,7 +123,7 @@ void touch_handle(lv_event_t* e)
 
 /**
  * api区
- * 
+ *
 */
 
 void Extra_display_init(uint16_t fps)
