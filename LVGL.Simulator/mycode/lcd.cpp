@@ -260,7 +260,7 @@ static void lcd_handle()
 }
 
 
-
+#define display_mode 2          //1为触摸测试 2为相机
 
 /**
  * 初始化与服务函数
@@ -268,7 +268,11 @@ static void lcd_handle()
 
 void LCD_INIT()
 {
+#if display_mode==1
+    display_set_size(400, 800, frema_buf);
+#else
     display_set_size(640, 480, frema_buf);
+#endif
     Extra_display_init(30);
 
 }
@@ -281,10 +285,13 @@ void LCD_INIT()
 void Ex_display_refulsh(lv_timer_t* e)
 {
     lv_obj_t* obj = (lv_obj_t*)e->user_data;
-    display1.visible = lv_obj_is_visible(obj);
-    //lcd_handle();
+    display1.visible = lv_obj_is_visible(obj);          //获取当前图片状态
+#if display_mode==1
+    lcd_handle();
+#else
     cam_frame_buff_output(frema_buf, 0);
-    lv_obj_invalidate(obj);
+#endif 
+    lv_obj_invalidate(obj);                             //控件刷新
 }
 
 
